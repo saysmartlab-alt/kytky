@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naše kytky 🌱</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Outfit:wght@300;400;500;600&display=swap');
+
+  :root{
+    --bg:#0f1b14; --bg2:#16271d; --card:#1c3326; --card2:#22402f;
+    --ink:#eaf3ec; --muted:#9fc0a9; --accent:#7bd88f; --accent2:#f2b84b;
+    --danger:#e8836b; --water:#6cc5e8; --line:rgba(123,216,143,.18);
+    --shadow:0 10px 40px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Outfit',sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(123,216,143,.10), transparent),
+      radial-gradient(900px 500px at -10% 110%, rgba(242,184,75,.08), transparent),
+      var(--bg);
+    color:var(--ink);min-height:100vh;padding:24px 16px 80px;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1100px;margin:0 auto}
+  header.top{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px}
+  .title h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(2rem,5vw,3.2rem);line-height:1;letter-spacing:-.02em}
+  .title h1 .leaf{color:var(--accent)}
+  .title p{color:var(--muted);margin-top:8px;font-weight:300;font-size:1.02rem}
+  .tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  button{font-family:'Outfit',sans-serif;cursor:pointer;border:none;border-radius:12px;font-weight:500;transition:transform .12s ease, background .2s ease, box-shadow .2s}
+  button:active{transform:scale(.96)}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line);padding:10px 16px;font-size:.9rem}
+  .btn-ghost:hover{color:var(--ink);border-color:var(--accent)}
+  .season{display:inline-flex;background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px}
+  .season button{background:transparent;color:var(--muted);padding:8px 16px;border-radius:999px;font-size:.88rem}
+  .season button.active{background:var(--accent);color:#0f1b14;font-weight:600}
+  .season button.active.winter{background:var(--water);color:#0f1b14}
+  .sync-pill{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--muted);padding:6px 12px;border:1px solid var(--line);border-radius:999px}
+  .sync-pill .d{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+  .sync-pill.busy .d{background:var(--accent2);animation:pulse 1s infinite}
+  .sync-pill.err .d{background:var(--danger)}
+  @keyframes pulse{50%{opacity:.3}}
+  .summary{background:linear-gradient(135deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:18px;padding:18px 22px;margin-bottom:24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--shadow)}
+  .summary .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .summary .big{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:600}
+  .summary .sub{color:var(--muted);font-size:.92rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+  .card{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow);position:relative;display:flex;flex-direction:column;transition:transform .15s ease, border-color .2s}
+  .card:hover{transform:translateY(-3px);border-color:rgba(123,216,143,.4)}
+  .card .emoji{font-size:2.4rem;padding:20px 22px 0}
+  .card .body{padding:6px 22px 20px;flex:1;display:flex;flex-direction:column}
+  .card h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.35rem;letter-spacing:-.01em}
+  .card .latin{color:var(--muted);font-style:italic;font-size:.85rem;margin-top:2px;margin-bottom:14px}
+  .water-status{border-radius:14px;padding:12px 14px;margin-bottom:14px;background:rgba(0,0,0,.18);border:1px solid var(--line)}
+  .water-status .when{font-weight:600;font-size:1rem;display:flex;align-items:center;gap:8px}
+  .water-status .meta{color:var(--muted);font-size:.82rem;margin-top:3px}
+  .status-ok .when{color:var(--accent)}
+  .status-soon .when{color:var(--accent2)}
+  .status-due .when{color:var(--danger)}
+  .btn-water{background:var(--water);color:#0f1b14;padding:12px;width:100%;font-size:.95rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px}
+  .btn-water:hover{box-shadow:0 6px 20px rgba(108,197,232,.35)}
+  .btn-detail{background:transparent;color:var(--muted);border:1px solid var(--line);padding:10px;width:100%;font-size:.85rem}
+  .btn-detail:hover{color:var(--ink);border-color:var(--accent)}
+  .overlay{position:fixed;inset:0;background:rgba(5,12,8,.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .overlay.show{display:flex;animation:fade .2s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal{background:linear-gradient(160deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:22px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow);animation:pop .22s cubic-bezier(.2,.8,.2,1)}
+  @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal-head{padding:24px 26px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:linear-gradient(160deg,var(--card),var(--bg2));display:flex;align-items:center;gap:14px}
+  .modal-head .emoji{font-size:2.4rem}
+  .modal-head h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.5rem}
+  .modal-head .latin{color:var(--muted);font-style:italic;font-size:.85rem}
+  .modal-close{margin-left:auto;background:rgba(0,0,0,.25);color:var(--ink);width:36px;height:36px;border-radius:10px;font-size:1.1rem;flex-shrink:0}
+  .modal-body{padding:8px 26px 26px}
+  .care-row{padding:14px 0;border-bottom:1px solid var(--line)}
+  .care-row:last-child{border-bottom:none}
+  .care-row .k{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.92rem;color:var(--accent);margin-bottom:4px}
+  .care-row .v{color:var(--ink);font-weight:300;line-height:1.5;font-size:.95rem}
+  .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:500;background:rgba(123,216,143,.15);color:var(--accent);border:1px solid var(--line)}
+  .warn-box{background:rgba(232,131,107,.12);border:1px solid rgba(232,131,107,.3);border-radius:12px;padding:12px 14px;margin-top:14px}
+  .warn-box .k{color:var(--danger)}
+  footer{text-align:center;color:var(--muted);font-size:.82rem;margin-top:40px;font-weight:300}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--accent);color:#0f1b14;padding:14px 22px;border-radius:14px;font-weight:600;box-shadow:var(--shadow);transition:transform .35s cubic-bezier(.2,.8,.2,1);z-index:60}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  /* login */
+  .login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;z-index:80;
+    background:radial-gradient(1200px 600px at 50% -10%, rgba(123,216,143,.12), transparent), var(--bg)}
+  .login .box{background:linear-gradient(160deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:24px;padding:36px 32px;max-width:380px;width:100%;text-align:center;box-shadow:var(--shadow)}
+  .login .box .big{font-size:3rem;margin-bottom:8px}
+  .login .box h1{font-family:'Fraunces',serif;font-weight:900;font-size:1.8rem;margin-bottom:6px}
+  .login .box p{color:var(--muted);font-weight:300;font-size:.92rem;margin-bottom:22px}
+  .login input{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:1rem;font-family:'Outfit',sans-serif;text-align:center;margin-bottom:14px}
+  .login input:focus{outline:none;border-color:var(--accent)}
+  .login button{width:100%;background:var(--accent);color:#0f1b14;padding:14px;font-size:1rem;font-weight:600}
+  .login .err{color:var(--danger);font-size:.88rem;min-height:20px;margin-top:4px}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="login">
+  <div class="box">
+    <div class="big">🌱</div>
+    <h1>Naše kytky</h1>
+    <p>Zadejte společné heslo pro přístup k vašim kytkám.</p>
+    <input type="password" id="pwInput" placeholder="Heslo" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Vstoupit</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="wrap hidden" id="app">
+  <header class="top">
+    <div class="title">
+      <h1>Naše <span class="leaf">kytky</span></h1>
+      <p>Přehled péče &amp; připomínání zálivky</p>
+    </div>
+    <div class="tools">
+      <div class="sync-pill" id="syncPill"><span class="d"></span><span id="syncText">Synchronizováno</span></div>
+      <div class="season" id="seasonToggle">
+        <button data-season="summer" class="active">☀️ Léto</button>
+        <button data-season="winter">❄️ Zima</button>
+      </div>
+    </div>
+  </header>
+  <div class="summary" id="summary"></div>
+  <div class="grid" id="grid"></div>
+  <footer>Vytvořeno s láskou k rostlinám 🌿 · Data se synchronizují mezi vámi dvěma</footer>
+</div>
+
+<div class="overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+  <div class="modal" id="detailModal"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const PLANTS = [
+  {id:'kaktus', emoji:'🌵', name:'Roubovaný kaktus', latin:'Gymnocalycium mihanovichii', difficulty:'Střední',
+   water:{summer:10, winter:35},
+   care:{'Zálivka – léto':'Cca 1× za 1–2 týdny. Vždy nech substrát úplně vyschnout. Lij ke kořenům, ne na tělo.','Zálivka – zima':'Minimálně, 1× za 4–6 týdnů jen trochu.','Voda':'Běžná kohoutková je v pohodě.','Umístění':'Hodně světla, ale ne pálivé polední slunce. Ideál východní/západní okno.','Substrát':'Kaktusový/sukulentní + perlit nebo hrubý písek (cca 1/3).','Přesazování':'1× za 2–3 roky na jaře, o trochu větší květináč s odtokem.','Hnojení':'Minimálně, kaktusové hnojivo na jaře.','Teplota v zimě':'Min. 10–15 °C, nesnese mráz.'},
+   warn:'Barevná korunka nemá chlorofyl a žije z naroubovaného zeleného podnože. Tyto kaktusy mají omezenou životnost (2–4 roky). Měkké/hnědnoucí skvrny = příliš vody.'},
+  {id:'mucholapka', emoji:'🪰', name:'Mucholapka podivná', latin:'Dionaea muscipula', difficulty:'Náročnější',
+   water:{summer:2, winter:7},
+   care:{'Zálivka – léto':'Musí být STÁLE vlhká, nikdy nesmí vyschnout! Nejlépe podmiskování (1–2 cm vody v misce).','Zálivka – zima':'Mírně vlhká během období spánku.','Voda':'POUZE dešťová nebo destilovaná! Kohoutková voda ji zabije.','Umístění':'Plné přímé slunce, min. 4–6 hodin denně. Nejslunečnější okno.','Substrát':'Speciální pro masožravky (rašelina + perlit). Nikdy běžná hlína!','Přesazování':'1× za 1–2 roky brzy na jaře.','Hnojení':'NIKDY nehnojit. Živiny získává z hmyzu.','Teplota v zimě':'Chladný spánek 5–10 °C (listopad–únor) je NUTNÝ.'},
+   warn:'Nešťouchej do pastí pro zábavu — každé sklapnutí ji stojí energii a past po pár sklapnutích odumře. Venku si chytí hmyz sama. Bez zimního spánku časem uhyne. Černající pasti v zimě jsou normální.'},
+  {id:'hawortie', emoji:'🌿', name:'Hawortie (zebří)', latin:'Haworthia fasciata / attenuata', difficulty:'Velmi snadná',
+   water:{summer:10, winter:25},
+   care:{'Zálivka – léto':'1× za 1–2 týdny, nech nejdřív pořádně vyschnout. Lij ke kořenům, ne do růžice.','Zálivka – zima':'1× za 3–4 týdny.','Voda':'Běžná kohoutková.','Umístění':'Jasné nepřímé světlo, snese i polostín. Skvělá na stůl. Ostré polední slunce pálí listy.','Substrát':'Kaktusový/sukulentní + perlit nebo písek.','Přesazování':'1× za 2–3 roky na jaře. Roste pomalu.','Hnojení':'1–2× za sezónu slabým sukulentním hnojivem.','Teplota v zimě':'Pokojová, nedávat pod 5 °C.'},
+   warn:'Průsvitné/měkké listy = přelití. Krčí se a vrásní = potřebuje zalít. Dělá odnože u základny — lze je oddělit a množit.'},
+  {id:'juka', emoji:'🌴', name:'Juka sloní', latin:'Yucca elephantipes', difficulty:'Snadná',
+   water:{summer:10, winter:28},
+   care:{'Zálivka – léto':'1× za 1–2 týdny, nech vyschnout horní třetinu až polovinu substrátu.','Zálivka – zima':'1× za 3–4 týdny.','Voda':'Běžná kohoutková.','Umístění':'Co nejvíc světla, ideálně přímé slunce. V létě jí prospěje pobyt venku (postupně navykat).','Substrát':'Propustný univerzál + písek nebo perlit. Nutný odtok!','Přesazování':'1× za 2–3 roky na jaře, do těžšího květináče (ať se nepřevrhne).','Hnojení':'Sukulentní/zelené hnojivo v sezóně.','Teplota v zimě':'Pokojová, ideál 10–15 °C. Ne k topení.'},
+   warn:'Přelití → měkký kmen a hniloba (nejčastější příčina úhynu). Spodní listy přirozeně žloutnou a opadávají, to je normální. Listy jsou mírně toxické při pozření (pozor na děti/zvířata).'}
+];
+
+let season = 'summer';
+let state = {};
+let password = sessionStorage.getItem('kytkyPw') || '';
+
+// ---------- LOGIN ----------
+async function doLogin(){
+  const pw = document.getElementById('pwInput').value.trim();
+  if(!pw){ return; }
+  document.getElementById('loginErr').textContent = 'Ověřuji…';
+  password = pw;
+  const ok = await fetchState();
+  if(ok){
+    sessionStorage.setItem('kytkyPw', pw);
+    document.getElementById('login').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    render();
+  } else {
+    document.getElementById('loginErr').textContent = 'Špatné heslo, zkuste znovu.';
+    password = '';
+  }
+}
+
+// ---------- API ----------
+async function fetchState(){
+  setSync('busy','Načítám…');
+  try{
+    const r = await fetch('/api/state', { headers: {'X-App-Password': password} });
+    if(r.status === 401){ setSync('err','Heslo'); return false; }
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    state = await r.json();
+    setSync('ok','Synchronizováno');
+    return true;
+  }catch(e){ setSync('err','Offline'); return false; }
+}
+
+async function pushWater(plantId, iso){
+  setSync('busy','Ukládám…');
+  try{
+    const r = await fetch('/api/state', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-App-Password':password},
+      body: JSON.stringify({plantId, lastWatered: iso})
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    setSync('ok','Synchronizováno');
+    return true;
+  }catch(e){ setSync('err','Chyba uložení'); return false; }
+}
+
+function setSync(cls, text){
+  const p = document.getElementById('syncPill');
+  p.className = 'sync-pill' + (cls==='busy'?' busy':cls==='err'?' err':'');
+  document.getElementById('syncText').textContent = text;
+}
+
+// ---------- LOGIKA ----------
+function daysUntilNext(plant){
+  const st = state[plant.id];
+  const interval = plant.water[season];
+  if(!st || !st.lastWatered) return null;
+  const last = new Date(st.lastWatered);
+  const next = new Date(last.getTime() + interval*86400000);
+  return Math.ceil((next - new Date())/86400000);
+}
+function statusFor(plant){
+  const d = daysUntilNext(plant);
+  if(d===null) return {cls:'status-soon', text:'Zatím nezalito', meta:'Klikni na „Zalito" až ji poprvé zaliješ', icon:'💧'};
+  if(d<=0) return {cls:'status-due', text:(d===0?'Zalít dnes!':`Po termínu o ${Math.abs(d)} d`), meta:'Čas na zálivku', icon:'⚠️'};
+  if(d<=2) return {cls:'status-soon', text:`Zalít za ${d} ${dni(d)}`, meta:'Brzy', icon:'🔔'};
+  return {cls:'status-ok', text:`Zalít za ${d} ${dni(d)}`, meta:'V pohodě', icon:'✅'};
+}
+function dni(n){ if(n===1)return 'den'; if(n>=2&&n<=4)return 'dny'; return 'dní'; }
+function fmtDate(iso){ if(!iso)return '—'; return new Date(iso).toLocaleDateString('cs-CZ',{day:'numeric',month:'numeric',year:'numeric'}); }
+
+function render(){
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  PLANTS.forEach(p=>{
+    const s = statusFor(p);
+    const st = state[p.id];
+    const card = document.createElement('div');
+    card.className='card';
+    card.innerHTML = `
+      <div class="emoji">${p.emoji}</div>
+      <div class="body">
+        <h2>${p.name}</h2>
+        <div class="latin">${p.latin}</div>
+        <div class="water-status ${s.cls}">
+          <div class="when">${s.icon} ${s.text}</div>
+          <div class="meta">Naposledy: ${fmtDate(st&&st.lastWatered)} · interval ${p.water[season]} dní</div>
+        </div>
+        <button class="btn-water" onclick="water('${p.id}')">💧 Zalito</button>
+        <button class="btn-detail" onclick="openDetail('${p.id}')">📖 Karta péče</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+  renderSummary();
+}
+function renderSummary(){
+  let due=0, soon=0;
+  PLANTS.forEach(p=>{ const d=daysUntilNext(p); if(d!==null&&d<=0)due++; else if(d!==null&&d<=2)soon++; });
+  const el = document.getElementById('summary');
+  let color, big, sub;
+  if(due>0){ color='var(--danger)'; big=`${due} ${due===1?'kytka potřebuje':'kytky/kytek potřebují'} zalít`; sub='Mrkni na červené karty níže.'; }
+  else if(soon>0){ color='var(--accent2)'; big=`${soon} ${soon===1?'kytka':'kytky'} brzy na řadě`; sub='Zatím nic akutního, ale připrav konev.'; }
+  else { color='var(--accent)'; big='Všechno v pohodě 🌿'; sub='Žádná kytka teď nepotřebuje zalít.'; }
+  el.innerHTML = `<span class="dot" style="background:${color}"></span><div><div class="big">${big}</div><div class="sub">${sub}</div></div>`;
+}
+async function water(id){
+  const iso = new Date().toISOString();
+  const prev = state[id];
+  state[id] = {lastWatered: iso};
+  render();
+  showToast('💧 Zapsáno! Hodná kytka.');
+  const ok = await pushWater(id, iso);
+  if(!ok){ state[id]=prev; render(); showToast('⚠️ Nepodařilo se uložit'); }
+}
+function openDetail(id){
+  const p = PLANTS.find(x=>x.id===id);
+  const m = document.getElementById('detailModal');
+  let rows='';
+  for(const [k,v] of Object.entries(p.care)){
+    rows += `<div class="care-row"><div class="k">${iconFor(k)} ${k}</div><div class="v">${v}</div></div>`;
+  }
+  m.innerHTML = `
+    <div class="modal-head"><span class="emoji">${p.emoji}</span>
+      <div><h2>${p.name}</h2><div class="latin">${p.latin}</div></div>
+      <button class="modal-close" onclick="closeDetail()">✕</button></div>
+    <div class="modal-body"><span class="badge">Náročnost: ${p.difficulty}</span>
+      <div style="margin-top:14px">${rows}</div>
+      <div class="warn-box"><div class="k" style="font-weight:600;margin-bottom:4px">⚠️ Dobré vědět</div><div class="v" style="font-weight:300;line-height:1.5">${p.warn}</div></div>
+    </div>`;
+  document.getElementById('detailOverlay').classList.add('show');
+}
+function iconFor(k){
+  if(k.includes('Zálivka'))return '💧'; if(k.includes('Voda'))return '🚰';
+  if(k.includes('Umístění'))return '☀️'; if(k.includes('Substrát'))return '🪴';
+  if(k.includes('Přesaz'))return '🌱'; if(k.includes('Hnojení'))return '🧪';
+  if(k.includes('Teplota'))return '🌡️'; return '•';
+}
+function closeDetail(){ document.getElementById('detailOverlay').classList.remove('show'); }
+
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('show'),2200);
+}
+document.getElementById('seasonToggle').addEventListener('click',e=>{
+  if(e.target.dataset.season){
+    season = e.target.dataset.season;
+    document.querySelectorAll('#seasonToggle button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.season===season);
+      b.classList.toggle('winter', season==='winter' && b.dataset.season==='winter');
+    });
+    render();
+  }
+});
+
+// auto-login pokud máme uložené heslo ze session; jinak refresh stavu po startu
+(async function init(){
+  if(password){
+    const ok = await fetchState();
+    if(ok){
+      document.getElementById('login').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+      render();
+    }
+  }
+})();
+
+// Při návratu do appky (přepnutí zpět na záložku) zkusí načíst čerstvá data
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden && password && !document.getElementById('app').classList.contains('hidden')){
+    fetchState().then(ok=>{ if(ok) render(); });
+  }
+});
+</script>
+</body>
+</html>
