@@ -47,8 +47,11 @@
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
   .card{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow);position:relative;display:flex;flex-direction:column;transition:transform .15s ease, border-color .2s}
   .card:hover{transform:translateY(-3px);border-color:rgba(123,216,143,.4)}
-  .card .photo{width:100%;height:180px;object-fit:cover;display:block;background:var(--bg2)}
-  .card .photo-emoji{width:100%;height:180px;display:flex;align-items:center;justify-content:center;font-size:3.6rem;background:linear-gradient(160deg,var(--card2),var(--bg2))}
+  .photo-wrap{position:relative;cursor:pointer}
+  .photo-wrap .photo{width:100%;height:180px;object-fit:cover;display:block;background:var(--bg2)}
+  .photo-wrap .photo-emoji{width:100%;height:180px;display:flex;align-items:center;justify-content:center;font-size:3.6rem;background:linear-gradient(160deg,var(--card2),var(--bg2))}
+  .photo-badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.55);color:#fff;padding:5px 11px;border-radius:999px;font-size:.8rem;font-weight:500;backdrop-filter:blur(4px);display:flex;align-items:center;gap:5px}
+  .photo-wrap:hover .photo-badge{background:rgba(0,0,0,.75)}
   .card .body{padding:16px 22px 20px;flex:1;display:flex;flex-direction:column}
   .card h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.35rem;letter-spacing:-.01em}
   .card .latin{color:var(--muted);font-style:italic;font-size:.85rem;margin-top:2px;margin-bottom:14px}
@@ -67,7 +70,7 @@
   @keyframes fade{from{opacity:0}to{opacity:1}}
   .modal{background:linear-gradient(160deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:22px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow);animation:pop .22s cubic-bezier(.2,.8,.2,1)}
   @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
-  .modal-head{padding:24px 26px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:linear-gradient(160deg,var(--card),var(--bg2));display:flex;align-items:center;gap:14px}
+  .modal-head{padding:24px 26px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:linear-gradient(160deg,var(--card),var(--bg2));display:flex;align-items:center;gap:14px;z-index:2}
   .modal-head .thumb{width:52px;height:52px;border-radius:13px;object-fit:cover;flex-shrink:0;background:var(--bg2)}
   .modal-head .thumb-emoji{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:2rem;background:rgba(0,0,0,.22);flex-shrink:0}
   .modal-head h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.5rem}
@@ -82,6 +85,19 @@
   .warn-box{background:rgba(232,131,107,.12);border:1px solid rgba(232,131,107,.3);border-radius:12px;padding:12px 14px;margin-top:14px}
   .warn-box .k{color:var(--danger)}
   .hint-box{background:rgba(108,197,232,.10);border:1px solid rgba(108,197,232,.3);border-radius:12px;padding:12px 14px;margin-top:14px;color:var(--ink);font-weight:300;font-size:.92rem;line-height:1.5}
+  .gal-wrap{position:relative}
+  .gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:16px;background:#000;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .gallery::-webkit-scrollbar{display:none}
+  .slide{flex:0 0 100%;scroll-snap-align:center;position:relative}
+  .slide img{width:100%;height:360px;object-fit:contain;display:block;background:#000}
+  .slide .cap{position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:linear-gradient(transparent,rgba(0,0,0,.75));color:#fff;font-size:.85rem;display:flex;justify-content:space-between;align-items:center}
+  .slide .del{background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.25);color:#fff;width:32px;height:32px;border-radius:9px;font-size:.95rem}
+  .gal-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.45);color:#fff;width:40px;height:40px;border-radius:50%;font-size:1.4rem;line-height:1;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:3}
+  .gal-arrow.left{left:8px} .gal-arrow.right{right:8px}
+  .gal-count{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;padding:4px 12px;border-radius:999px;font-size:.8rem;backdrop-filter:blur(4px);z-index:3}
+  .gal-empty{text-align:center;padding:48px 16px;color:var(--muted);background:rgba(0,0,0,.18);border:1px dashed var(--line);border-radius:16px;font-size:1.05rem;line-height:1.7}
+  .gal-empty span{font-size:.9rem}
+  .gal-hint{color:var(--muted);font-size:.85rem;font-weight:300;line-height:1.5;margin-top:12px;text-align:center}
   footer{text-align:center;color:var(--muted);font-size:.82rem;margin-top:40px;font-weight:300}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--accent);color:#0f1b14;padding:14px 22px;border-radius:14px;font-weight:600;box-shadow:var(--shadow);transition:transform .35s cubic-bezier(.2,.8,.2,1);z-index:60;max-width:90%;text-align:center}
   .toast.show{transform:translateX(-50%) translateY(0)}
@@ -111,6 +127,10 @@
 <div class="overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
   <div class="modal" id="detailModal"></div>
 </div>
+<div class="overlay" id="galleryOverlay" onclick="if(event.target===this)closeGallery()">
+  <div class="modal" id="galleryModal"></div>
+</div>
+<input type="file" accept="image/*" id="photoInput" style="display:none">
 <div class="toast" id="toast"></div>
 
 <script>
@@ -133,30 +153,37 @@ const PLANTS = [
    warn:'Přelití → měkký kmen a hniloba (nejčastější příčina úhynu). Spodní listy přirozeně žloutnou a opadávají, to je normální. Listy jsou mírně toxické při pozření (pozor na děti/zvířata).'}
 ];
 
-// kandidátní přípony fotek (zkusí se postupně), jinak fallback na emoji
 const PHOTO_EXTS = ['jpg','jpeg','png','webp'];
-
 let season = 'summer';
 let state = {};
+let photoIndex = {};
 
-// ---------- FOTKY (s fallbackem na emoji) ----------
-function imgHTML(p, cls){
-  return `<img class="${cls}" src="${p.id}.${PHOTO_EXTS[0]}" alt="${p.name}" loading="lazy" data-i="0" onerror="imgErr(this,'${p.id}','${p.emoji}','${cls}')">`;
+function photoCandidates(p){
+  const c = [];
+  const idx = photoIndex[p.id];
+  if(idx && idx.latestId) c.push(`/api/photo?id=${idx.latestId}`);
+  PHOTO_EXTS.forEach(e=>c.push(`${p.id}.${e}`));
+  return c;
 }
-function imgErr(img, id, emoji, cls){
-  let i = parseInt(img.dataset.i || '0', 10) + 1;
-  if(i < PHOTO_EXTS.length){
-    img.dataset.i = i;
-    img.src = `${id}.${PHOTO_EXTS[i]}`;
+function imgHTML(p, cls){
+  const c = photoCandidates(p);
+  const rest = c.slice(1).join('|');
+  return `<img class="${cls}" src="${c[0]}" alt="${p.name}" loading="lazy" data-cands="${rest}" data-emoji="${p.emoji}" data-cls="${cls}" onerror="imgErr(this)">`;
+}
+function imgErr(img){
+  const rest = (img.dataset.cands||'').split('|').filter(Boolean);
+  if(rest.length){
+    const next = rest.shift();
+    img.dataset.cands = rest.join('|');
+    img.src = next;
   } else {
     const d = document.createElement('div');
-    d.className = cls + '-emoji';
-    d.textContent = emoji;
+    d.className = (img.dataset.cls||'photo') + '-emoji';
+    d.textContent = img.dataset.emoji || '🌱';
     if(img.parentNode) img.replaceWith(d);
   }
 }
 
-// ---------- API ----------
 async function fetchState(){
   setSync('busy','Načítám…');
   try{
@@ -168,6 +195,9 @@ async function fetchState(){
     setSync('ok','Synchronizováno');
     return true;
   }catch(e){ setSync('err','Offline'); return false; }
+}
+async function fetchPhotoIndex(){
+  try{ const r = await fetch('/api/photos'); if(r.ok) photoIndex = await r.json(); }catch(e){}
 }
 async function pushWater(plantId, iso){
   setSync('busy','Ukládám…');
@@ -186,7 +216,6 @@ function setSync(cls, text){
   document.getElementById('syncText').textContent = text;
 }
 
-// ---------- OZNÁMENÍ ----------
 function isiOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent); }
 function isStandalone(){ return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches; }
 function urlB64ToUint8Array(base64String){
@@ -209,8 +238,7 @@ async function enableNotifications(){
     return;
   }
   if(!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)){
-    showToast('⚠️ Tento prohlížeč oznámení nepodporuje');
-    return;
+    showToast('⚠️ Tento prohlížeč oznámení nepodporuje'); return;
   }
   try{
     const reg = await navigator.serviceWorker.ready;
@@ -223,13 +251,11 @@ async function enableNotifications(){
     if(!sub){ sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: urlB64ToUint8Array(publicKey) }); }
     const r = await fetch('/api/subscribe', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
     if(!r.ok) throw new Error('save failed');
-    markNotifyOn();
-    showToast('🔔 Oznámení zapnutá!');
+    markNotifyOn(); showToast('🔔 Oznámení zapnutá!');
   }catch(e){ showToast('⚠️ Oznámení se nepodařilo zapnout'); }
 }
 function markNotifyOn(){ const b = document.getElementById('notifyBtn'); b.classList.add('on'); b.textContent = '🔔 Oznámení zapnutá'; }
 
-// ---------- LOGIKA ----------
 function daysUntilNext(plant){
   const st = state[plant.id];
   const interval = plant.water[season];
@@ -240,12 +266,13 @@ function daysUntilNext(plant){
 }
 function statusFor(plant){
   const d = daysUntilNext(plant);
-  if(d===null) return {cls:'status-soon', text:'Zatím nezalito', meta:'Klikni na „Zalito" až ji poprvé zaliješ', icon:'💧'};
-  if(d<=0) return {cls:'status-due', text:(d===0?'Zalít dnes!':`Po termínu o ${Math.abs(d)} d`), meta:'Čas na zálivku', icon:'⚠️'};
-  if(d<=2) return {cls:'status-soon', text:`Zalít za ${d} ${dni(d)}`, meta:'Brzy', icon:'🔔'};
-  return {cls:'status-ok', text:`Zalít za ${d} ${dni(d)}`, meta:'V pohodě', icon:'✅'};
+  if(d===null) return {cls:'status-soon', text:'Zatím nezalito', icon:'💧'};
+  if(d<=0) return {cls:'status-due', text:(d===0?'Zalít dnes!':`Po termínu o ${Math.abs(d)} d`), icon:'⚠️'};
+  if(d<=2) return {cls:'status-soon', text:`Zalít za ${d} ${dni(d)}`, icon:'🔔'};
+  return {cls:'status-ok', text:`Zalít za ${d} ${dni(d)}`, icon:'✅'};
 }
 function dni(n){ if(n===1)return 'den'; if(n>=2&&n<=4)return 'dny'; return 'dní'; }
+function fotek(n){ if(n===1)return 'fotka'; if(n>=2&&n<=4)return 'fotky'; return 'fotek'; }
 function fmtDate(iso){ if(!iso)return '—'; return new Date(iso).toLocaleDateString('cs-CZ',{day:'numeric',month:'numeric',year:'numeric'}); }
 
 function render(){
@@ -254,10 +281,14 @@ function render(){
   PLANTS.forEach(p=>{
     const s = statusFor(p);
     const st = state[p.id];
+    const count = (photoIndex[p.id] && photoIndex[p.id].count) || 0;
     const card = document.createElement('div');
     card.className='card';
     card.innerHTML = `
-      ${imgHTML(p,'photo')}
+      <div class="photo-wrap" onclick="openGallery('${p.id}')">
+        ${imgHTML(p,'photo')}
+        <div class="photo-badge">📷 ${count}</div>
+      </div>
       <div class="body">
         <h2>${p.name}</h2>
         <div class="latin">${p.latin}</div>
@@ -291,6 +322,7 @@ async function water(id){
   const ok = await pushWater(id, iso);
   if(!ok){ state[id]=prev; render(); showToast('⚠️ Nepodařilo se uložit'); }
 }
+
 function openDetail(id){
   const p = PLANTS.find(x=>x.id===id);
   const m = document.getElementById('detailModal');
@@ -325,6 +357,105 @@ function iconFor(k){
 }
 function closeDetail(){ document.getElementById('detailOverlay').classList.remove('show'); }
 
+let currentGalleryPlant = null;
+async function openGallery(id, jumpToEnd){
+  currentGalleryPlant = id;
+  const p = PLANTS.find(x=>x.id===id);
+  let photos = [];
+  try{ const r = await fetch(`/api/photos?plant=${id}`); if(r.ok) photos = await r.json(); }catch(e){}
+  let slides = '';
+  photos.forEach(ph=>{
+    const d = fmtDate(ph.created_at);
+    slides += `<div class="slide"><img src="/api/photo?id=${ph.id}" alt="" loading="lazy"><div class="cap"><span>📅 ${d}</span><button class="del" onclick="deletePhoto(${ph.id},'${id}')">🗑</button></div></div>`;
+  });
+  const body = photos.length
+    ? `<div class="gal-wrap">
+         ${photos.length>1?'<button class="gal-arrow left" onclick="galScroll(-1)">‹</button>':''}
+         <div class="gallery" id="galleryStrip" onscroll="galOnScroll()">${slides}</div>
+         ${photos.length>1?'<button class="gal-arrow right" onclick="galScroll(1)">›</button>':''}
+         <div class="gal-count" id="galCount">1 / ${photos.length}</div>
+       </div>`
+    : `<div class="gal-empty">Zatím žádné fotky 🌱<br><span>Přidej první a sleduj, jak roste!</span></div>`;
+  const m = document.getElementById('galleryModal');
+  m.innerHTML = `
+    <div class="modal-head">${imgHTML(p,'thumb')}
+      <div><h2>${p.name}</h2><div class="latin">Růstová galerie · ${photos.length} ${fotek(photos.length)}</div></div>
+      <button class="modal-close" onclick="closeGallery()">✕</button></div>
+    <div class="modal-body">
+      ${body}
+      <button class="btn-water" style="margin-top:16px" onclick="pickPhoto('${id}')">📷 Přidat fotku</button>
+      <p class="gal-hint">Tip: focení ze stejného místa a úhlu pomáhá hezky porovnat růst. 🌿</p>
+    </div>`;
+  document.getElementById('galleryOverlay').classList.add('show');
+  if(jumpToEnd){
+    setTimeout(()=>{ const s=document.getElementById('galleryStrip'); if(s){ s.scrollLeft=s.scrollWidth; galOnScroll(); } }, 60);
+  }
+}
+function closeGallery(){ document.getElementById('galleryOverlay').classList.remove('show'); }
+function galScroll(dir){
+  const s = document.getElementById('galleryStrip'); if(!s) return;
+  s.scrollBy({ left: dir*s.clientWidth, behavior:'smooth' });
+}
+function galOnScroll(){
+  const s = document.getElementById('galleryStrip'); if(!s) return;
+  const total = s.children.length;
+  const i = Math.min(Math.round(s.scrollLeft / s.clientWidth)+1, total);
+  const c = document.getElementById('galCount'); if(c) c.textContent = `${i} / ${total}`;
+}
+
+function pickPhoto(plantId){
+  const inp = document.getElementById('photoInput');
+  inp.onchange = ()=>{
+    const f = inp.files && inp.files[0];
+    inp.value = '';
+    if(f) addPhoto(plantId, f);
+  };
+  inp.click();
+}
+function fileToResizedDataURL(file, maxSide, quality){
+  return new Promise((resolve, reject)=>{
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = ()=>{
+      URL.revokeObjectURL(url);
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if(Math.max(w,h) > maxSide){
+        if(w>=h){ h = Math.round(h*maxSide/w); w = maxSide; }
+        else { w = Math.round(w*maxSide/h); h = maxSide; }
+      }
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(cv.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('Obrázek nelze načíst')); };
+    img.src = url;
+  });
+}
+async function addPhoto(plantId, file){
+  showToast('📷 Nahrávám fotku…');
+  try{
+    const dataUrl = await fileToResizedDataURL(file, 1100, 0.72);
+    const r = await fetch('/api/photos', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plantId, data:dataUrl})});
+    if(!r.ok) throw new Error('upload');
+    await fetchPhotoIndex();
+    render();
+    await openGallery(plantId, true);
+    showToast('✅ Fotka přidána!');
+  }catch(e){ showToast('⚠️ Nahrání se nepovedlo (zkus jpg/png, ne HEIC)'); }
+}
+async function deletePhoto(photoId, plantId){
+  if(!confirm('Opravdu smazat tuhle fotku?')) return;
+  try{
+    const r = await fetch(`/api/photos?id=${photoId}`, {method:'DELETE'});
+    if(!r.ok) throw new Error('del');
+    await fetchPhotoIndex();
+    render();
+    openGallery(plantId);
+    showToast('🗑 Fotka smazána');
+  }catch(e){ showToast('⚠️ Smazání se nepovedlo'); }
+}
+
 let toastTimer;
 function showToast(msg){
   const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
@@ -339,15 +470,21 @@ function applySeasonButtons(){
 document.getElementById('seasonToggle').addEventListener('click',e=>{
   if(e.target.dataset.season){
     season = e.target.dataset.season;
-    applySeasonButtons();
-    render();
-    pushSeason(season);
+    applySeasonButtons(); render(); pushSeason(season);
   }
 });
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
 function refreshNotifyButton(){ if('Notification' in window && Notification.permission === 'granted'){ markNotifyOn(); } }
-(async function init(){ await fetchState(); render(); refreshNotifyButton(); })();
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ fetchState().then(ok=>{ if(ok) render(); }); } });
+
+(async function init(){
+  await fetchState();
+  await fetchPhotoIndex();
+  render();
+  refreshNotifyButton();
+})();
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden){ Promise.all([fetchState(), fetchPhotoIndex()]).then(()=>render()); }
+});
 </script>
 </body>
 </html>
