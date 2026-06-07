@@ -5,7 +5,7 @@ Tahle aktualizace dělá dvě věci:
 2. **Přidává oznámení** — v den, kdy je kytka na řadě k zálivce, přijde oznámení (banner)
    i když appku nemáš otevřenou. Funguje na Androidu i iPhonu (na iPhonu po přidání na plochu).
 
----
+--- bla
 
 ## Co je nové ve složce
 
