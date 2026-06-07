@@ -47,8 +47,9 @@
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
   .card{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow);position:relative;display:flex;flex-direction:column;transition:transform .15s ease, border-color .2s}
   .card:hover{transform:translateY(-3px);border-color:rgba(123,216,143,.4)}
-  .card .emoji{font-size:2.4rem;padding:20px 22px 0}
-  .card .body{padding:6px 22px 20px;flex:1;display:flex;flex-direction:column}
+  .card .photo{width:100%;height:180px;object-fit:cover;display:block;background:var(--bg2)}
+  .card .photo-emoji{width:100%;height:180px;display:flex;align-items:center;justify-content:center;font-size:3.6rem;background:linear-gradient(160deg,var(--card2),var(--bg2))}
+  .card .body{padding:16px 22px 20px;flex:1;display:flex;flex-direction:column}
   .card h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.35rem;letter-spacing:-.01em}
   .card .latin{color:var(--muted);font-style:italic;font-size:.85rem;margin-top:2px;margin-bottom:14px}
   .water-status{border-radius:14px;padding:12px 14px;margin-bottom:14px;background:rgba(0,0,0,.18);border:1px solid var(--line)}
@@ -67,7 +68,8 @@
   .modal{background:linear-gradient(160deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:22px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow);animation:pop .22s cubic-bezier(.2,.8,.2,1)}
   @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
   .modal-head{padding:24px 26px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:linear-gradient(160deg,var(--card),var(--bg2));display:flex;align-items:center;gap:14px}
-  .modal-head .emoji{font-size:2.4rem}
+  .modal-head .thumb{width:52px;height:52px;border-radius:13px;object-fit:cover;flex-shrink:0;background:var(--bg2)}
+  .modal-head .thumb-emoji{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:2rem;background:rgba(0,0,0,.22);flex-shrink:0}
   .modal-head h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.5rem}
   .modal-head .latin{color:var(--muted);font-style:italic;font-size:.85rem}
   .modal-close{margin-left:auto;background:rgba(0,0,0,.25);color:var(--ink);width:36px;height:36px;border-radius:10px;font-size:1.1rem;flex-shrink:0}
@@ -131,8 +133,28 @@ const PLANTS = [
    warn:'Přelití → měkký kmen a hniloba (nejčastější příčina úhynu). Spodní listy přirozeně žloutnou a opadávají, to je normální. Listy jsou mírně toxické při pozření (pozor na děti/zvířata).'}
 ];
 
+// kandidátní přípony fotek (zkusí se postupně), jinak fallback na emoji
+const PHOTO_EXTS = ['jpg','jpeg','png','webp'];
+
 let season = 'summer';
 let state = {};
+
+// ---------- FOTKY (s fallbackem na emoji) ----------
+function imgHTML(p, cls){
+  return `<img class="${cls}" src="${p.id}.${PHOTO_EXTS[0]}" alt="${p.name}" loading="lazy" data-i="0" onerror="imgErr(this,'${p.id}','${p.emoji}','${cls}')">`;
+}
+function imgErr(img, id, emoji, cls){
+  let i = parseInt(img.dataset.i || '0', 10) + 1;
+  if(i < PHOTO_EXTS.length){
+    img.dataset.i = i;
+    img.src = `${id}.${PHOTO_EXTS[i]}`;
+  } else {
+    const d = document.createElement('div');
+    d.className = cls + '-emoji';
+    d.textContent = emoji;
+    if(img.parentNode) img.replaceWith(d);
+  }
+}
 
 // ---------- API ----------
 async function fetchState(){
@@ -167,7 +189,6 @@ function setSync(cls, text){
 // ---------- OZNÁMENÍ ----------
 function isiOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent); }
 function isStandalone(){ return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches; }
-
 function urlB64ToUint8Array(base64String){
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding).replace(/-/g,'+').replace(/_/g,'/');
@@ -176,9 +197,7 @@ function urlB64ToUint8Array(base64String){
   for(let i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
   return arr;
 }
-
 async function enableNotifications(){
-  // iPhone: oznámení fungují jen z appky přidané na plochu
   if(isiOS() && !isStandalone()){
     showInfoModal('📲 Ještě jeden krok na iPhonu',
       'Aby na iPhonu chodila oznámení, musíš appku nejdřív přidat na plochu a otevřít ji z té ikony:<br><br>'
@@ -197,25 +216,18 @@ async function enableNotifications(){
     const reg = await navigator.serviceWorker.ready;
     const perm = await Notification.requestPermission();
     if(perm !== 'granted'){ showToast('Oznámení nebyla povolena'); return; }
-
     const keyResp = await fetch('/api/subscribe');
     const { publicKey } = await keyResp.json();
     if(!publicKey){ showToast('⚠️ Chybí klíč pro oznámení'); return; }
-
     let sub = await reg.pushManager.getSubscription();
-    if(!sub){
-      sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: urlB64ToUint8Array(publicKey) });
-    }
+    if(!sub){ sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: urlB64ToUint8Array(publicKey) }); }
     const r = await fetch('/api/subscribe', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
     if(!r.ok) throw new Error('save failed');
     markNotifyOn();
     showToast('🔔 Oznámení zapnutá!');
   }catch(e){ showToast('⚠️ Oznámení se nepodařilo zapnout'); }
 }
-function markNotifyOn(){
-  const b = document.getElementById('notifyBtn');
-  b.classList.add('on'); b.textContent = '🔔 Oznámení zapnutá';
-}
+function markNotifyOn(){ const b = document.getElementById('notifyBtn'); b.classList.add('on'); b.textContent = '🔔 Oznámení zapnutá'; }
 
 // ---------- LOGIKA ----------
 function daysUntilNext(plant){
@@ -245,7 +257,7 @@ function render(){
     const card = document.createElement('div');
     card.className='card';
     card.innerHTML = `
-      <div class="emoji">${p.emoji}</div>
+      ${imgHTML(p,'photo')}
       <div class="body">
         <h2>${p.name}</h2>
         <div class="latin">${p.latin}</div>
@@ -287,7 +299,7 @@ function openDetail(id){
     rows += `<div class="care-row"><div class="k">${iconFor(k)} ${k}</div><div class="v">${v}</div></div>`;
   }
   m.innerHTML = `
-    <div class="modal-head"><span class="emoji">${p.emoji}</span>
+    <div class="modal-head">${imgHTML(p,'thumb')}
       <div><h2>${p.name}</h2><div class="latin">${p.latin}</div></div>
       <button class="modal-close" onclick="closeDetail()">✕</button></div>
     <div class="modal-body"><span class="badge">Náročnost: ${p.difficulty}</span>
@@ -299,7 +311,7 @@ function openDetail(id){
 function showInfoModal(title, html){
   const m = document.getElementById('detailModal');
   m.innerHTML = `
-    <div class="modal-head"><span class="emoji">🔔</span>
+    <div class="modal-head"><span class="thumb-emoji">🔔</span>
       <div><h2>${title}</h2></div>
       <button class="modal-close" onclick="closeDetail()">✕</button></div>
     <div class="modal-body"><div class="hint-box">${html}</div></div>`;
@@ -318,7 +330,6 @@ function showToast(msg){
   const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('show'),2600);
 }
-
 function applySeasonButtons(){
   document.querySelectorAll('#seasonToggle button').forEach(b=>{
     b.classList.toggle('active', b.dataset.season===season);
@@ -333,28 +344,10 @@ document.getElementById('seasonToggle').addEventListener('click',e=>{
     pushSeason(season);
   }
 });
-
-// registrace service workeru (nutné pro oznámení)
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/sw.js').catch(()=>{});
-}
-
-// stav tlačítka oznámení při startu
-function refreshNotifyButton(){
-  if('Notification' in window && Notification.permission === 'granted'){ markNotifyOn(); }
-}
-
-// start
-(async function init(){
-  await fetchState();
-  render();
-  refreshNotifyButton();
-})();
-
-// při návratu do appky načti čerstvá data
-document.addEventListener('visibilitychange', ()=>{
-  if(!document.hidden){ fetchState().then(ok=>{ if(ok) render(); }); }
-});
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
+function refreshNotifyButton(){ if('Notification' in window && Notification.permission === 'granted'){ markNotifyOn(); } }
+(async function init(){ await fetchState(); render(); refreshNotifyButton(); })();
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ fetchState().then(ok=>{ if(ok) render(); }); } });
 </script>
 </body>
 </html>
