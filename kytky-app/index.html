@@ -4,9 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Naše kytky 🌱</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0f1b14">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kytky">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Outfit:wght@300;400;500;600&display=swap');
-
   :root{
     --bg:#0f1b14; --bg2:#16271d; --card:#1c3326; --card2:#22402f;
     --ink:#eaf3ec; --muted:#9fc0a9; --accent:#7bd88f; --accent2:#f2b84b;
@@ -14,14 +19,7 @@
     --shadow:0 10px 40px rgba(0,0,0,.4);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{
-    font-family:'Outfit',sans-serif;
-    background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(123,216,143,.10), transparent),
-      radial-gradient(900px 500px at -10% 110%, rgba(242,184,75,.08), transparent),
-      var(--bg);
-    color:var(--ink);min-height:100vh;padding:24px 16px 80px;-webkit-font-smoothing:antialiased;
-  }
+  body{font-family:'Outfit',sans-serif;background:radial-gradient(1200px 600px at 80% -10%, rgba(123,216,143,.10), transparent),radial-gradient(900px 500px at -10% 110%, rgba(242,184,75,.08), transparent),var(--bg);color:var(--ink);min-height:100vh;padding:24px 16px 80px;-webkit-font-smoothing:antialiased}
   .wrap{max-width:1100px;margin:0 auto}
   header.top{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px}
   .title h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(2rem,5vw,3.2rem);line-height:1;letter-spacing:-.02em}
@@ -32,6 +30,7 @@
   button:active{transform:scale(.96)}
   .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line);padding:10px 16px;font-size:.9rem}
   .btn-ghost:hover{color:var(--ink);border-color:var(--accent)}
+  .btn-ghost.on{color:var(--accent);border-color:var(--accent)}
   .season{display:inline-flex;background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px}
   .season button{background:transparent;color:var(--muted);padding:8px 16px;border-radius:999px;font-size:.88rem}
   .season button.active{background:var(--accent);color:#0f1b14;font-weight:600}
@@ -80,46 +79,22 @@
   .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:500;background:rgba(123,216,143,.15);color:var(--accent);border:1px solid var(--line)}
   .warn-box{background:rgba(232,131,107,.12);border:1px solid rgba(232,131,107,.3);border-radius:12px;padding:12px 14px;margin-top:14px}
   .warn-box .k{color:var(--danger)}
+  .hint-box{background:rgba(108,197,232,.10);border:1px solid rgba(108,197,232,.3);border-radius:12px;padding:12px 14px;margin-top:14px;color:var(--ink);font-weight:300;font-size:.92rem;line-height:1.5}
   footer{text-align:center;color:var(--muted);font-size:.82rem;margin-top:40px;font-weight:300}
-  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--accent);color:#0f1b14;padding:14px 22px;border-radius:14px;font-weight:600;box-shadow:var(--shadow);transition:transform .35s cubic-bezier(.2,.8,.2,1);z-index:60}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--accent);color:#0f1b14;padding:14px 22px;border-radius:14px;font-weight:600;box-shadow:var(--shadow);transition:transform .35s cubic-bezier(.2,.8,.2,1);z-index:60;max-width:90%;text-align:center}
   .toast.show{transform:translateX(-50%) translateY(0)}
-  /* login */
-  .login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;z-index:80;
-    background:radial-gradient(1200px 600px at 50% -10%, rgba(123,216,143,.12), transparent), var(--bg)}
-  .login .box{background:linear-gradient(160deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:24px;padding:36px 32px;max-width:380px;width:100%;text-align:center;box-shadow:var(--shadow)}
-  .login .box .big{font-size:3rem;margin-bottom:8px}
-  .login .box h1{font-family:'Fraunces',serif;font-weight:900;font-size:1.8rem;margin-bottom:6px}
-  .login .box p{color:var(--muted);font-weight:300;font-size:.92rem;margin-bottom:22px}
-  .login input{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:1rem;font-family:'Outfit',sans-serif;text-align:center;margin-bottom:14px}
-  .login input:focus{outline:none;border-color:var(--accent)}
-  .login button{width:100%;background:var(--accent);color:#0f1b14;padding:14px;font-size:1rem;font-weight:600}
-  .login .err{color:var(--danger);font-size:.88rem;min-height:20px;margin-top:4px}
-  .hidden{display:none!important}
 </style>
 </head>
 <body>
-
-<!-- LOGIN -->
-<div class="login" id="login">
-  <div class="box">
-    <div class="big">🌱</div>
-    <h1>Naše kytky</h1>
-    <p>Zadejte společné heslo pro přístup k vašim kytkám.</p>
-    <input type="password" id="pwInput" placeholder="Heslo" onkeydown="if(event.key==='Enter')doLogin()">
-    <button onclick="doLogin()">Vstoupit</button>
-    <div class="err" id="loginErr"></div>
-  </div>
-</div>
-
-<!-- APP -->
-<div class="wrap hidden" id="app">
+<div class="wrap" id="app">
   <header class="top">
     <div class="title">
       <h1>Naše <span class="leaf">kytky</span></h1>
       <p>Přehled péče &amp; připomínání zálivky</p>
     </div>
     <div class="tools">
-      <div class="sync-pill" id="syncPill"><span class="d"></span><span id="syncText">Synchronizováno</span></div>
+      <div class="sync-pill" id="syncPill"><span class="d"></span><span id="syncText">Načítám…</span></div>
+      <button class="btn-ghost" id="notifyBtn" onclick="enableNotifications()">🔔 Oznámení</button>
       <div class="season" id="seasonToggle">
         <button data-season="summer" class="active">☀️ Léto</button>
         <button data-season="winter">❄️ Zima</button>
@@ -158,57 +133,88 @@ const PLANTS = [
 
 let season = 'summer';
 let state = {};
-let password = sessionStorage.getItem('kytkyPw') || '';
-
-// ---------- LOGIN ----------
-async function doLogin(){
-  const pw = document.getElementById('pwInput').value.trim();
-  if(!pw){ return; }
-  document.getElementById('loginErr').textContent = 'Ověřuji…';
-  password = pw;
-  const ok = await fetchState();
-  if(ok){
-    sessionStorage.setItem('kytkyPw', pw);
-    document.getElementById('login').classList.add('hidden');
-    document.getElementById('app').classList.remove('hidden');
-    render();
-  } else {
-    document.getElementById('loginErr').textContent = 'Špatné heslo, zkuste znovu.';
-    password = '';
-  }
-}
 
 // ---------- API ----------
 async function fetchState(){
   setSync('busy','Načítám…');
   try{
-    const r = await fetch('/api/state', { headers: {'X-App-Password': password} });
-    if(r.status === 401){ setSync('err','Heslo'); return false; }
+    const r = await fetch('/api/state');
     if(!r.ok) throw new Error('HTTP '+r.status);
-    state = await r.json();
+    const data = await r.json();
+    state = data.watering || {};
+    if(data.season === 'summer' || data.season === 'winter'){ season = data.season; applySeasonButtons(); }
     setSync('ok','Synchronizováno');
     return true;
   }catch(e){ setSync('err','Offline'); return false; }
 }
-
 async function pushWater(plantId, iso){
   setSync('busy','Ukládám…');
   try{
-    const r = await fetch('/api/state', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-App-Password':password},
-      body: JSON.stringify({plantId, lastWatered: iso})
-    });
+    const r = await fetch('/api/state', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plantId, lastWatered: iso})});
     if(!r.ok) throw new Error('HTTP '+r.status);
-    setSync('ok','Synchronizováno');
-    return true;
+    setSync('ok','Synchronizováno'); return true;
   }catch(e){ setSync('err','Chyba uložení'); return false; }
 }
-
+async function pushSeason(s){
+  try{ await fetch('/api/state', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({season:s})}); }catch(e){}
+}
 function setSync(cls, text){
   const p = document.getElementById('syncPill');
   p.className = 'sync-pill' + (cls==='busy'?' busy':cls==='err'?' err':'');
   document.getElementById('syncText').textContent = text;
+}
+
+// ---------- OZNÁMENÍ ----------
+function isiOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent); }
+function isStandalone(){ return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches; }
+
+function urlB64ToUint8Array(base64String){
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw = atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
+  return arr;
+}
+
+async function enableNotifications(){
+  // iPhone: oznámení fungují jen z appky přidané na plochu
+  if(isiOS() && !isStandalone()){
+    showInfoModal('📲 Ještě jeden krok na iPhonu',
+      'Aby na iPhonu chodila oznámení, musíš appku nejdřív přidat na plochu a otevřít ji z té ikony:<br><br>'
+      +'1. Dole klepni na ikonu <b>Sdílet</b> (čtvereček se šipkou ↑).<br>'
+      +'2. Vyber <b>Přidat na plochu</b>.<br>'
+      +'3. Otevři appku z nové ikony na ploše.<br>'
+      +'4. Tam znovu klepni na <b>🔔 Oznámení</b>.<br><br>'
+      +'Tohle je bohužel podmínka Applu, nedá se obejít.');
+    return;
+  }
+  if(!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)){
+    showToast('⚠️ Tento prohlížeč oznámení nepodporuje');
+    return;
+  }
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){ showToast('Oznámení nebyla povolena'); return; }
+
+    const keyResp = await fetch('/api/subscribe');
+    const { publicKey } = await keyResp.json();
+    if(!publicKey){ showToast('⚠️ Chybí klíč pro oznámení'); return; }
+
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub){
+      sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: urlB64ToUint8Array(publicKey) });
+    }
+    const r = await fetch('/api/subscribe', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
+    if(!r.ok) throw new Error('save failed');
+    markNotifyOn();
+    showToast('🔔 Oznámení zapnutá!');
+  }catch(e){ showToast('⚠️ Oznámení se nepodařilo zapnout'); }
+}
+function markNotifyOn(){
+  const b = document.getElementById('notifyBtn');
+  b.classList.add('on'); b.textContent = '🔔 Oznámení zapnutá';
 }
 
 // ---------- LOGIKA ----------
@@ -290,6 +296,15 @@ function openDetail(id){
     </div>`;
   document.getElementById('detailOverlay').classList.add('show');
 }
+function showInfoModal(title, html){
+  const m = document.getElementById('detailModal');
+  m.innerHTML = `
+    <div class="modal-head"><span class="emoji">🔔</span>
+      <div><h2>${title}</h2></div>
+      <button class="modal-close" onclick="closeDetail()">✕</button></div>
+    <div class="modal-body"><div class="hint-box">${html}</div></div>`;
+  document.getElementById('detailOverlay').classList.add('show');
+}
 function iconFor(k){
   if(k.includes('Zálivka'))return '💧'; if(k.includes('Voda'))return '🚰';
   if(k.includes('Umístění'))return '☀️'; if(k.includes('Substrát'))return '🪴';
@@ -301,36 +316,44 @@ function closeDetail(){ document.getElementById('detailOverlay').classList.remov
 let toastTimer;
 function showToast(msg){
   const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('show'),2200);
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+function applySeasonButtons(){
+  document.querySelectorAll('#seasonToggle button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.season===season);
+    b.classList.toggle('winter', season==='winter' && b.dataset.season==='winter');
+  });
 }
 document.getElementById('seasonToggle').addEventListener('click',e=>{
   if(e.target.dataset.season){
     season = e.target.dataset.season;
-    document.querySelectorAll('#seasonToggle button').forEach(b=>{
-      b.classList.toggle('active', b.dataset.season===season);
-      b.classList.toggle('winter', season==='winter' && b.dataset.season==='winter');
-    });
+    applySeasonButtons();
     render();
+    pushSeason(season);
   }
 });
 
-// auto-login pokud máme uložené heslo ze session; jinak refresh stavu po startu
+// registrace service workeru (nutné pro oznámení)
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+
+// stav tlačítka oznámení při startu
+function refreshNotifyButton(){
+  if('Notification' in window && Notification.permission === 'granted'){ markNotifyOn(); }
+}
+
+// start
 (async function init(){
-  if(password){
-    const ok = await fetchState();
-    if(ok){
-      document.getElementById('login').classList.add('hidden');
-      document.getElementById('app').classList.remove('hidden');
-      render();
-    }
-  }
+  await fetchState();
+  render();
+  refreshNotifyButton();
 })();
 
-// Při návratu do appky (přepnutí zpět na záložku) zkusí načíst čerstvá data
+// při návratu do appky načti čerstvá data
 document.addEventListener('visibilitychange', ()=>{
-  if(!document.hidden && password && !document.getElementById('app').classList.contains('hidden')){
-    fetchState().then(ok=>{ if(ok) render(); });
-  }
+  if(!document.hidden){ fetchState().then(ok=>{ if(ok) render(); }); }
 });
 </script>
 </body>

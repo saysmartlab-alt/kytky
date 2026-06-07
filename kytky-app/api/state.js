@@ -1,63 +1,67 @@
-// Serverless funkce běžící na Vercelu.
-// Stará se o čtení a zápis stavu zálivky do Neon Postgres databáze.
-// Chráněno jednoduchým sdíleným heslem (proměnná APP_PASSWORD).
+// Čte a zapisuje stav zálivky + nastavení sezóny do Neon Postgres.
+// Bez hesla (přístup je volný – chrání jen neveřejná adresa appky).
 
 import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
 
-// Jednorázově zajistí, že tabulka existuje.
 let initialized = false;
-async function ensureTable() {
+async function ensureTables() {
   if (initialized) return;
   await sql`
     CREATE TABLE IF NOT EXISTS watering_state (
       plant_id TEXT PRIMARY KEY,
-      last_watered TIMESTAMPTZ
-    )
-  `;
+      last_watered TIMESTAMPTZ,
+      last_notified TIMESTAMPTZ
+    )`;
+  // pro případ staré tabulky bez sloupce last_notified
+  await sql`ALTER TABLE watering_state ADD COLUMN IF NOT EXISTS last_notified TIMESTAMPTZ`;
+  await sql`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)`;
   initialized = true;
 }
 
 export default async function handler(req, res) {
-  // CORS – ať appka funguje i z jiné domény, kdyby bylo potřeba
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-App-Password');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
-  // Kontrola hesla
-  const password = req.headers['x-app-password'];
-  if (!process.env.APP_PASSWORD || password !== process.env.APP_PASSWORD) {
-    res.status(401).json({ error: 'Špatné heslo' });
-    return;
-  }
-
   try {
-    await ensureTable();
+    await ensureTables();
 
     if (req.method === 'GET') {
-      // Vrátí stav všech kytek
       const rows = await sql`SELECT plant_id, last_watered FROM watering_state`;
-      const state = {};
-      for (const r of rows) {
-        state[r.plant_id] = { lastWatered: r.last_watered };
-      }
-      res.status(200).json(state);
+      const watering = {};
+      for (const r of rows) watering[r.plant_id] = { lastWatered: r.last_watered };
+      const seasonRows = await sql`SELECT value FROM settings WHERE key = 'season'`;
+      const season = (seasonRows[0] && seasonRows[0].value) || 'summer';
+      res.status(200).json({ watering, season });
       return;
     }
 
     if (req.method === 'POST') {
-      // Zapíše/aktualizuje zálivku jedné kytky
-      const { plantId, lastWatered } = req.body;
-      if (!plantId) { res.status(400).json({ error: 'Chybí plantId' }); return; }
-      await sql`
-        INSERT INTO watering_state (plant_id, last_watered)
-        VALUES (${plantId}, ${lastWatered})
-        ON CONFLICT (plant_id)
-        DO UPDATE SET last_watered = ${lastWatered}
-      `;
-      res.status(200).json({ ok: true });
+      const body = req.body || {};
+
+      // Uložení sezóny
+      if (body.season === 'summer' || body.season === 'winter') {
+        await sql`
+          INSERT INTO settings (key, value) VALUES ('season', ${body.season})
+          ON CONFLICT (key) DO UPDATE SET value = ${body.season}`;
+        res.status(200).json({ ok: true });
+        return;
+      }
+
+      // Zápis zálivky jedné kytky
+      if (body.plantId) {
+        await sql`
+          INSERT INTO watering_state (plant_id, last_watered)
+          VALUES (${body.plantId}, ${body.lastWatered})
+          ON CONFLICT (plant_id) DO UPDATE SET last_watered = ${body.lastWatered}`;
+        res.status(200).json({ ok: true });
+        return;
+      }
+
+      res.status(400).json({ error: 'Chybí data' });
       return;
     }
 

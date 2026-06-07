@@ -1,141 +1,142 @@
-# 🌱 Naše kytky — návod na zprovoznění
+# 🌱 Naše kytky — verze 2 (bez hesla + oznámení)
 
-Tahle appka hlídá péči o vaše kytky a **synchronizuje** stav zálivky mezi tebou a přítelkyní.
-Funguje na PC i mobilu, chrání ji společné heslo.
-
-Návod tě provede vším krok za krokem. Počítej s cca 20–30 minutami. Nemusíš nic umět programovat — jen klikat podle návodu.
+Tahle aktualizace dělá dvě věci:
+1. **Odstraňuje přihlašovací heslo** — appka se otevře rovnou.
+2. **Přidává oznámení** — v den, kdy je kytka na řadě k zálivce, přijde oznámení (banner)
+   i když appku nemáš otevřenou. Funguje na Androidu i iPhonu (na iPhonu po přidání na plochu).
 
 ---
 
-## Co je ve složce
+## Co je nové ve složce
 
 ```
 kytky-app/
-├── index.html        ← vzhled appky (frontend)
+├── index.html        ← appka (bez hesla, s tlačítkem 🔔 Oznámení)
+├── manifest.json     ← NOVÉ: aby šla appka přidat na plochu jako "appka"
+├── sw.js             ← NOVÉ: service worker (přijímá oznámení)
+├── icon-192.png      ← NOVÉ: ikona appky
+├── icon-512.png      ← NOVÉ: ikona appky
+├── icon-180.png      ← NOVÉ: ikona pro iPhone
 ├── api/
-│   └── state.js      ← funkce, co čte/zapisuje do databáze
-├── package.json      ← seznam knihoven
-├── vercel.json       ← konfigurace
-├── .gitignore
+│   ├── state.js      ← upraveno (bez hesla, ukládá i sezónu)
+│   ├── subscribe.js  ← NOVÉ: ukládá odběr oznámení
+│   └── notify.js     ← NOVÉ: denní kontrola, která posílá oznámení
+├── package.json      ← upraveno (přidána knihovna web-push)
+├── vercel.json       ← upraveno (nastavena denní kontrola)
 └── NAVOD.md          ← tento návod
 ```
 
 ---
 
-## KROK 1 — Nahraj projekt na GitHub
+## KROK 1 — Nahraj nové soubory na GitHub
 
-1. Vytvoř si nový **prázdný repozitář** na GitHubu (např. `nase-kytky`). Klidně **Private** (soukromý).
-2. Nahraj do něj celý obsah složky `kytky-app` (všechny soubory včetně složky `api`).
-   - Buď přes web (tlačítko „Add file → Upload files" a soubory přetáhni),
-   - nebo přes Git, pokud ho používáš:
-     ```
-     git init
-     git add .
-     git commit -m "Naše kytky"
-     git branch -M main
-     git remote add origin https://github.com/TVUJUCET/nase-kytky.git
-     git push -u origin main
-     ```
+Nahraj **obsah** složky `kytky-app` do svého repozitáře `kytky` stejně jako minule
+(Add file → Upload files, přetáhnout). Nové soubory se přidají, změněné se přepíšou.
+Struktura uvnitř `kytky-app/` zůstává stejná (Root Directory na Vercelu už máš nastavený na `kytky-app`).
+
+> Pozor: musí se nahrát i složka `api` se **třemi** soubory (state.js, subscribe.js, notify.js)
+> a obrázky ikon (icon-192/512/180.png).
 
 ---
 
-## KROK 2 — Založ databázi na Vercelu (Neon)
+## KROK 2 — Přidej nové proměnné prostředí na Vercelu
 
-1. Přihlas se na **vercel.com**.
-2. Nahoře klikni na záložku **Storage**.
-3. Klikni na **Create Database** (nebo Browse Marketplace).
-4. Vyber **Neon** (Serverless Postgres). Je zdarma na malý projekt.
-5. Potvrď vytvoření (název nech klidně výchozí, region zvol Evropu, např. Frankfurt).
-6. Po vytvoření Vercel databázi automaticky propojí a vytvoří proměnnou `DATABASE_URL`.
-   - Tu nemusíš nikam ručně kopírovat — Vercel ji vloží do projektu sám, jakmile je projekt s databází propojený (viz krok 4).
+V projektu **kytky** → **Settings → Environment Variables**.
+Heslo (`APP_PASSWORD`) už můžeš smazat (nepoužívá se). Přidej tyto tři:
 
-> Poznámka: Vercel už nemá vlastní „Vercel Postgres", místo toho použiješ Neon přes Marketplace — funguje to stejně dobře a je to zdarma.
+| Name              | Value                                                                 |
+|-------------------|-----------------------------------------------------------------------|
+| `VAPID_PUBLIC_KEY`  | (viz níže – veřejný klíč)                                           |
+| `VAPID_PRIVATE_KEY` | (viz níže – soukromý klíč)                                          |
+| `CRON_SECRET`       | (viz níže – tajný klíč pro denní kontrolu)                          |
 
----
+Hodnoty (zkopíruj přesně, bez mezer):
 
-## KROK 3 — Vytvoř projekt na Vercelu z GitHubu
+```
+VAPID_PUBLIC_KEY=
+BB4c6JQ-iHlShYwIJEsvCpGCxr4z3S68Ci0C7gIpAk7rAFSRWTj7aBwAQcypm6Z8w94wF8g8P5XIdbwehePXQbI
 
-1. Na Vercelu klikni na **Add New… → Project**.
-2. Vyber svůj GitHub repozitář `nase-kytky` a dej **Import**.
-3. Nastavení nech výchozí (Framework Preset: **Other**). Zatím **NEKLIKEJ hned na Deploy** — nejdřív přidej proměnné (krok 4).
-   - Pokud už jsi nasadil/a, nevadí, proměnné přidáš a nasadíš znovu.
+VAPID_PRIVATE_KEY=
+1Sl5eURPNSFjxSN7IjO5t_TebcH7L_c8eupqFL781Ig
 
----
+CRON_SECRET=
+d2ed0c95e9d67b1d04c1d40472d1dab2b0a7db23f10547a6
+```
 
-## KROK 4 — Nastav proměnné prostředí (Environment Variables)
-
-V projektu na Vercelu jdi do **Settings → Environment Variables** a přidej:
-
-| Name (název)    | Value (hodnota)                          |
-|-----------------|------------------------------------------|
-| `APP_PASSWORD`  | *vaše společné heslo* (např. `kytky2026`) |
-| `DATABASE_URL`  | *obvykle už tam je z kroku 2*             |
-
-- `APP_PASSWORD` si zvolte sami — tohle heslo budete oba zadávat při vstupu do appky.
-- `DATABASE_URL` by tam měla být automaticky po propojení s databází. Pokud ne:
-  1. Jdi do **Storage**, otevři svou Neon databázi.
-  2. Najdi **Connect Project** a propoj ji s projektem `nase-kytky`.
-  3. Tím se `DATABASE_URL` doplní sama.
-
-> Důležité: po přidání/změně proměnných je potřeba **znovu nasadit** (Redeploy), aby se projevily — viz krok 5.
+> `DATABASE_URL` už tam máš z minula — tu nech být.
+> Tyto klíče jsou jen pro tuhle appku. Soukromý klíč nedávej nikam jinam (do kódu/repozitáře nepatří).
 
 ---
 
-## KROK 5 — Nasaď (Deploy)
+## KROK 3 — Znovu nasaď (Redeploy)
 
-1. V projektu jdi na záložku **Deployments**.
-2. U posledního nasazení klikni na „⋯" → **Redeploy** (nebo prostě znovu Deploy).
-3. Počkej, až nasazení zezelená (Ready).
-4. Dostaneš veřejnou adresu, např. `https://nase-kytky.vercel.app`.
+Po přidání proměnných: **Deployments → u nejnovějšího „⋯" → Redeploy**.
+Počkej na zelené **Ready**.
 
----
-
-## KROK 6 — Vyzkoušej
-
-1. Otevři adresu v prohlížeči.
-2. Zadej heslo, které jsi nastavil/a v `APP_PASSWORD`.
-3. Klikni u nějaké kytky na **💧 Zalito**.
-4. Otevři tu samou adresu na mobilu (nebo v jiném prohlížeči), zadej stejné heslo —
-   a uvidíš, že se zálivka **synchronizovala**. 🎉
+> Při nasazení Vercel sám nainstaluje knihovnu `web-push` (je v package.json) a zaregistruje
+> denní kontrolu (cron). Cron se aktivuje na produkčním nasazení.
 
 ---
 
-## KROK 7 — Přidej na plochu mobilu (volitelné)
+## KROK 4 — Vyzkoušej appku
 
-Aby to vypadalo jako normální appka s ikonou:
-- **Android (Chrome):** menu ⋮ → *Přidat na plochu*.
-- **iPhone (Safari):** ikona sdílení ⬆️ → *Přidat na plochu*.
+Otevři `https://kytky.vercel.app` — měla by naskočit rovnou (bez hesla). Zkus „💧 Zalito".
 
 ---
 
-## Jak to celé funguje (ve zkratce)
+## KROK 5 — Zapni oznámení
 
-- **index.html** = vzhled, běží v prohlížeči. Když klikneš „Zalito", pošle to na server.
-- **api/state.js** = malá funkce na Vercelu. Ověří heslo a uloží/načte data z databáze.
-- **Neon databáze** = trvale ukládá, kdy byla která kytka zalitá. Proto to vidíte oba.
+### Na PC (Chrome/Edge/Firefox)
+1. Klepni na **🔔 Oznámení**.
+2. Prohlížeč se zeptá na povolení → dej **Povolit**.
+3. Tlačítko se změní na „🔔 Oznámení zapnutá". Hotovo.
+
+### Na iPhonu (důležité pořadí kroků!)
+Na iPhonu oznámení fungují **jen z appky přidané na plochu** (podmínka Applu):
+1. Otevři `https://kytky.vercel.app` v **Safari**.
+2. Dole klepni na ikonu **Sdílet** (čtvereček se šipkou ↑).
+3. Vyber **Přidat na plochu** → **Přidat**.
+4. Otevři appku z **nové ikony na ploše** (ne ze Safari!).
+5. Teď klepni na **🔔 Oznámení** a dej **Povolit**.
+
+### Na Androidu
+1. Otevři appku v Chrome (klidně i přidej na plochu: menu ⋮ → Přidat na plochu).
+2. Klepni na **🔔 Oznámení** → **Povolit**.
+
+> Oznámení zapněte na **každém zařízení zvlášť**, kde je chcete dostávat (tvůj mobil i mobil přítelkyně).
+
+---
+
+## Jak oznámení fungují
+
+- Jednou denně ráno (kolem 7–8 h našeho času) proběhne na Vercelu automatická kontrola.
+- Projde kytky a u kterých už uplynul interval od poslední zálivky, pošle jedno oznámení:
+  „🌱 Čas na zálivku — Dnes potřebují zalít: …".
+- Když kytku zaliješ (💧 Zalito), interval se počítá znovu a na další oznámení dojde, až bude zase čas.
+- Oznámení na jednu kytku přijde jednou za cyklus (nebude otravovat každý den).
+- Intervaly se řídí přepínačem **Léto/Zima** — ten teď platí pro oba (je uložený v databázi).
 
 ---
 
 ## Časté problémy
 
-**„Špatné heslo" i když ho píšu správně**
-→ Zkontroluj, že `APP_PASSWORD` na Vercelu nemá mezeru navíc, a že jsi po jeho nastavení udělal/a Redeploy.
+**Na iPhonu nejde zapnout oznámení / nic se neděje**
+→ Appka musí být spuštěná z ikony na ploše, ne ze Safari. Přidej na plochu a otevři odtud (krok 5).
 
-**„Offline" / data se nenačtou**
-→ Nejspíš chybí nebo je špatně `DATABASE_URL`. Zkontroluj propojení databáze s projektem (krok 4) a znovu nasaď.
+**Tlačítko 🔔 řekne „nepodařilo se zapnout"**
+→ Zkontroluj, že máš na Vercelu nastavené `VAPID_PUBLIC_KEY` i `VAPID_PRIVATE_KEY` a dal/a jsi Redeploy.
 
-**Appka funguje, ale data se nesdílí**
-→ Oba musíte používat **stejnou adresu** `…vercel.app` a **stejné heslo**. (Soubor otevřený lokálně z disku se nesynchronizuje — musí to běžet z Vercelu.)
+**Oznámení vůbec nechodí**
+→ Ověř, že proběhl Redeploy po přidání proměnných a že v `vercel.json` je sekce „crons".
+→ Denní kontrolu si můžeš ověřit i ručně: v projektu na Vercelu jdi do **Settings → Cron Jobs**,
+   tam uvidíš úlohu `/api/notify` a můžeš ji spustit testovacím tlačítkem (Run).
 
-**Chci změnit heslo**
-→ Změň `APP_PASSWORD` v Settings → Environment Variables a dej Redeploy.
+**Appka je teď bez hesla — je to bezpečné?**
+→ Data jsou jen o zálivce kytek (nízké riziko). Chrání je neveřejná adresa.
+   Kdybys chtěl/a heslo zpět nebo jinou ochranu, dá se to doplnit.
 
 ---
 
-## Chceš něco upravit?
-
-- Přidat další kytku → v `index.html` najdi seznam `PLANTS` a přidej další položku podle vzoru.
-- Změnit intervaly zálivky → uprav čísla `water:{summer:…, winter:…}` (dny).
-- Přidat fotky místo emoji, poznámky, historii zálivek… → dá se, jen řekni.
-
-Hodně zdaru a ať se kytkám daří! 🌿
+## Chceš něco dál vylepšit?
+- Fotky kytek místo emoji · historii zálivek (kdo a kdy) · víc kytek · druhé oznámení když se zapomene.
+  Stačí říct. 🌿

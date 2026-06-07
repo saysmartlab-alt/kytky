@@ -1,9 +1,10 @@
 {
   "name": "nase-kytky",
-  "version": "1.0.0",
-  "description": "Aplikace na hlídání péče o pokojové kytky se synchronizací",
+  "version": "2.0.0",
+  "description": "Aplikace na hlídání péče o pokojové kytky se synchronizací a oznámeními",
   "private": true,
   "dependencies": {
-    "@neondatabase/serverless": "^0.10.4"
+    "@neondatabase/serverless": "^0.10.4",
+    "web-push": "^3.6.7"
   }
 }
