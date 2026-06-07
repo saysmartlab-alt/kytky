@@ -1,4 +1,4 @@
-# 🌱 Naše kytky — verze 2 (bez hesla + oznámení)
+# 🌱 Naše kytky — verze 2 (bez hesla + oznámení) 
 
 Tahle aktualizace dělá dvě věci:
 1. **Odstraňuje přihlašovací heslo** — appka se otevře rovnou.
