@@ -150,13 +150,31 @@ const PLANTS = [
   {id:'juka', emoji:'🌴', name:'Juka sloní', latin:'Yucca elephantipes', difficulty:'Snadná',
    water:{summer:10, winter:28},
    care:{'Zálivka – léto':'1× za 1–2 týdny, nech vyschnout horní třetinu až polovinu substrátu.','Zálivka – zima':'1× za 3–4 týdny.','Voda':'Běžná kohoutková.','Umístění':'Co nejvíc světla, ideálně přímé slunce. V létě jí prospěje pobyt venku (postupně navykat).','Substrát':'Propustný univerzál + písek nebo perlit. Nutný odtok!','Přesazování':'1× za 2–3 roky na jaře, do těžšího květináče (ať se nepřevrhne).','Hnojení':'Sukulentní/zelené hnojivo v sezóně.','Teplota v zimě':'Pokojová, ideál 10–15 °C. Ne k topení.'},
-   warn:'Přelití → měkký kmen a hniloba (nejčastější příčina úhynu). Spodní listy přirozeně žloutnou a opadávají, to je normální. Listy jsou mírně toxické při pozření (pozor na děti/zvířata).'}
+   warn:'Přelití → měkký kmen a hniloba (nejčastější příčina úhynu). Spodní listy přirozeně žloutnou a opadávají, to je normální. Listy jsou mírně toxické při pozření (pozor na děti/zvířata).'},
+  {id:'avokado', emoji:'🥑', name:'Avokádo (Persea americana)', latin:'Persea americana', difficulty:'Projekt z pecky', project:true,
+   phases:[
+     {name:'1 · Klíčení v sáčku', interval:5, task:'Zkontroluj vlhkost utěrky — má být vlhká, ne mokrá. Případně otři plíseň a utěrku navlhči/vyměň. Drž ve tmě a v teple (20–25 °C).', next:'Až pecka praskne a vyraší kořínek ~3–5 cm, přejdi do fáze 2.'},
+     {name:'2 · Kořínek ve vodě', interval:7, task:'Pecku dej do sklenice tak, aby spodní třetina byla ve vodě (zápichy/párátka jako opora). Postav na světlo (ne přímé slunce). Vyměň vodu cca 1× týdně.', next:'Až vyroste stonek ~15 cm, přejdi do fáze 3.'},
+     {name:'3 · Stonek a listy', interval:7, task:'Když je stonek ~15 cm, zaštípni vršek (asi na 8 cm), ať se větví. Doplňuj vodu. Sleduj listy.', next:'Až má pár listů a silnější kořeny, přejdi do fáze 4.'},
+     {name:'4 · Zasazeno v hlíně', interval:7, task:'Zasaď do propustného substrátu, pecku nech z poloviny nad hlínou. Zalévej, ať je hlína mírně vlhká. Hodně světla.', next:'Hotovo — teď už roste jako stromek. 🌳'}
+   ],
+   care:{'Voda':'Klíčení/voda: vlhko, ne mokro. Po zasazení mírně vlhká hlína.','Umístění':'Fáze klíčení ve tmě a v teple; pak hodně světla (ne ostré polední slunce).','Teplota':'Teplo 20–25 °C urychlí klíčení. Nesnese chlad.','Substrát (fáze 4)':'Propustný univerzál + trochu písku/perlitu, květináč s odtokem.','Trpělivost':'Klíčení trvá klidně 2–6 týdnů, někdy déle. Každá pecka má svoje tempo.','Zaštipování':'Po dosažení ~15 cm zaštípnout vršek — donutí to rostlinu se větvit, jinak roste jako hůl.'},
+   warn:'Z pecky vypěstovaný stromek doma většinou neplodí (a pokud, tak po mnoha letech) — ber to jako parádní okrasný projekt. Listy a pecka avokáda jsou mírně toxické pro psy, kočky a koně, pozor na mazlíčky.'}
 ];
 
 const PHOTO_EXTS = ['jpg','jpeg','png','webp'];
 let season = 'summer';
 let state = {};
 let photoIndex = {};
+let avokadoPhase = 1;   // aktuální fáze avokáda (1–4)
+
+function intervalFor(plant){
+  if(plant.project && plant.phases){
+    const ph = plant.phases[Math.min(avokadoPhase, plant.phases.length) - 1];
+    return ph ? ph.interval : 5;
+  }
+  return plant.water[season];
+}
 
 function photoCandidates(p){
   const c = [];
@@ -192,6 +210,7 @@ async function fetchState(){
     const data = await r.json();
     state = data.watering || {};
     if(data.season === 'summer' || data.season === 'winter'){ season = data.season; applySeasonButtons(); }
+    if(data.avokadoPhase){ avokadoPhase = Math.max(1, Math.min(4, parseInt(data.avokadoPhase,10)||1)); }
     setSync('ok','Synchronizováno');
     return true;
   }catch(e){ setSync('err','Offline'); return false; }
@@ -258,7 +277,7 @@ function markNotifyOn(){ const b = document.getElementById('notifyBtn'); b.class
 
 function daysUntilNext(plant){
   const st = state[plant.id];
-  const interval = plant.water[season];
+  const interval = intervalFor(plant);
   if(!st || !st.lastWatered) return null;
   const last = new Date(st.lastWatered);
   const next = new Date(last.getTime() + interval*86400000);
@@ -266,10 +285,12 @@ function daysUntilNext(plant){
 }
 function statusFor(plant){
   const d = daysUntilNext(plant);
-  if(d===null) return {cls:'status-soon', text:'Zatím nezalito', icon:'💧'};
-  if(d<=0) return {cls:'status-due', text:(d===0?'Zalít dnes!':`Po termínu o ${Math.abs(d)} d`), icon:'⚠️'};
-  if(d<=2) return {cls:'status-soon', text:`Zalít za ${d} ${dni(d)}`, icon:'🔔'};
-  return {cls:'status-ok', text:`Zalít za ${d} ${dni(d)}`, icon:'✅'};
+  const proj = plant.project;
+  const verb = proj ? 'Zkontrolovat' : 'Zalít';
+  if(d===null) return {cls:'status-soon', text:proj?'Zatím nezkontrolováno':'Zatím nezalito', icon:'💧'};
+  if(d<=0) return {cls:'status-due', text:(d===0?(proj?'Zkontrolovat dnes!':'Zalít dnes!'):`Po termínu o ${Math.abs(d)} d`), icon:'⚠️'};
+  if(d<=2) return {cls:'status-soon', text:`${verb} za ${d} ${dni(d)}`, icon:'🔔'};
+  return {cls:'status-ok', text:`${verb} za ${d} ${dni(d)}`, icon:'✅'};
 }
 function dni(n){ if(n===1)return 'den'; if(n>=2&&n<=4)return 'dny'; return 'dní'; }
 function fotek(n){ if(n===1)return 'fotka'; if(n>=2&&n<=4)return 'fotky'; return 'fotek'; }
@@ -284,21 +305,42 @@ function render(){
     const count = (photoIndex[p.id] && photoIndex[p.id].count) || 0;
     const card = document.createElement('div');
     card.className='card';
-    card.innerHTML = `
-      <div class="photo-wrap" onclick="openGallery('${p.id}')">
-        ${imgHTML(p,'photo')}
-        <div class="photo-badge">📷 ${count}</div>
-      </div>
-      <div class="body">
-        <h2>${p.name}</h2>
-        <div class="latin">${p.latin}</div>
-        <div class="water-status ${s.cls}">
-          <div class="when">${s.icon} ${s.text}</div>
-          <div class="meta">Naposledy: ${fmtDate(st&&st.lastWatered)} · interval ${p.water[season]} dní</div>
+    if(p.project){
+      const ph = p.phases[Math.min(avokadoPhase, p.phases.length)-1];
+      const isLast = avokadoPhase >= p.phases.length;
+      card.innerHTML = `
+        <div class="photo-wrap" onclick="openGallery('${p.id}')">
+          ${imgHTML(p,'photo')}
+          <div class="photo-badge">📷 ${count}</div>
         </div>
-        <button class="btn-water" onclick="water('${p.id}')">💧 Zalito</button>
-        <button class="btn-detail" onclick="openDetail('${p.id}')">📖 Karta péče</button>
-      </div>`;
+        <div class="body">
+          <h2>${p.name}</h2>
+          <div class="latin">Fáze ${avokadoPhase}/${p.phases.length} · ${ph.name.replace(/^\d+ · /,'')}</div>
+          <div class="water-status ${s.cls}">
+            <div class="when">${s.icon} ${s.text}</div>
+            <div class="meta">Naposledy: ${fmtDate(st&&st.lastWatered)} · kontrola á ${intervalFor(p)} dní</div>
+          </div>
+          <button class="btn-water" onclick="water('${p.id}')">✅ Zkontrolováno</button>
+          ${isLast ? '' : `<button class="btn-detail" style="margin-bottom:6px;border-color:var(--accent);color:var(--accent)" onclick="advancePhase()">➡️ Další fáze</button>`}
+          <button class="btn-detail" onclick="openDetail('${p.id}')">📖 Plán &amp; péče</button>
+        </div>`;
+    } else {
+      card.innerHTML = `
+        <div class="photo-wrap" onclick="openGallery('${p.id}')">
+          ${imgHTML(p,'photo')}
+          <div class="photo-badge">📷 ${count}</div>
+        </div>
+        <div class="body">
+          <h2>${p.name}</h2>
+          <div class="latin">${p.latin}</div>
+          <div class="water-status ${s.cls}">
+            <div class="when">${s.icon} ${s.text}</div>
+            <div class="meta">Naposledy: ${fmtDate(st&&st.lastWatered)} · interval ${p.water[season]} dní</div>
+          </div>
+          <button class="btn-water" onclick="water('${p.id}')">💧 Zalito</button>
+          <button class="btn-detail" onclick="openDetail('${p.id}')">📖 Karta péče</button>
+        </div>`;
+    }
     grid.appendChild(card);
   });
   renderSummary();
@@ -316,11 +358,26 @@ function renderSummary(){
 async function water(id){
   const iso = new Date().toISOString();
   const prev = state[id];
+  const plant = PLANTS.find(x=>x.id===id);
   state[id] = {lastWatered: iso};
   render();
-  showToast('💧 Zapsáno! Hodná kytka.');
+  showToast(plant && plant.project ? '✅ Kontrola zapsána!' : '💧 Zapsáno! Hodná kytka.');
   const ok = await pushWater(id, iso);
   if(!ok){ state[id]=prev; render(); showToast('⚠️ Nepodařilo se uložit'); }
+}
+
+async function pushPhase(n){
+  try{ await fetch('/api/state', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({avokadoPhase:n})}); }catch(e){}
+}
+async function advancePhase(){
+  const p = PLANTS.find(x=>x.project);
+  if(!p) return;
+  if(avokadoPhase >= p.phases.length){ showToast('🌳 Avokádo je v poslední fázi'); return; }
+  if(!confirm('Posunout avokádo do další fáze?')) return;
+  avokadoPhase += 1;
+  render();
+  showToast(`➡️ Fáze ${avokadoPhase}: ${p.phases[avokadoPhase-1].name.replace(/^\d+ · /,'')}`);
+  await pushPhase(avokadoPhase);
 }
 
 function openDetail(id){
@@ -330,11 +387,25 @@ function openDetail(id){
   for(const [k,v] of Object.entries(p.care)){
     rows += `<div class="care-row"><div class="k">${iconFor(k)} ${k}</div><div class="v">${v}</div></div>`;
   }
+  let phasesHtml = '';
+  if(p.project && p.phases){
+    let items = '';
+    p.phases.forEach((ph, i)=>{
+      const n = i+1;
+      const cur = n===avokadoPhase;
+      const done = n < avokadoPhase;
+      const mark = done ? '✅' : (cur ? '👉' : '⏳');
+      const col = cur ? 'var(--accent)' : (done ? 'var(--muted)' : 'var(--ink)');
+      items += `<div class="care-row"><div class="k" style="color:${col}">${mark} ${ph.name}${cur?' — teď':''}</div><div class="v">${ph.task}<br><span style="color:var(--muted)">${ph.next}</span></div></div>`;
+    });
+    phasesHtml = `<div class="hint-box" style="margin-bottom:6px"><b>Růstový plán</b> — appka ti připomene kontrolu podle aktuální fáze (teď fáze ${avokadoPhase}/${p.phases.length}). Až bude čas, posuň „Další fáze" na kartě.</div>${items}`;
+  }
   m.innerHTML = `
     <div class="modal-head">${imgHTML(p,'thumb')}
       <div><h2>${p.name}</h2><div class="latin">${p.latin}</div></div>
       <button class="modal-close" onclick="closeDetail()">✕</button></div>
     <div class="modal-body"><span class="badge">Náročnost: ${p.difficulty}</span>
+      ${phasesHtml ? `<div style="margin-top:14px">${phasesHtml}</div>` : ''}
       <div style="margin-top:14px">${rows}</div>
       <div class="warn-box"><div class="k" style="font-weight:600;margin-bottom:4px">⚠️ Dobré vědět</div><div class="v" style="font-weight:300;line-height:1.5">${p.warn}</div></div>
     </div>`;
