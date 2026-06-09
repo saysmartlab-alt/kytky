@@ -19,7 +19,10 @@ const NAMES = {
   mucholapka: 'Mucholapka',
   hawortie: 'Hawortie',
   juka: 'Juka',
+  avokado: 'Avokádo',
 };
+// Avokádo se kontroluje podle fáze (1–4), ne podle sezóny.
+const AVO_PHASE_INTERVAL = { 1: 5, 2: 7, 3: 7, 4: 7 };
 
 export default async function handler(req, res) {
   // Ověření, že požadavek přišel od Vercel Cronu (ne od kohokoli z internetu)
@@ -50,6 +53,8 @@ export default async function handler(req, res) {
 
     const seasonRows = await sql`SELECT value FROM settings WHERE key = 'season'`;
     const season = (seasonRows[0] && seasonRows[0].value) || 'summer';
+    const phaseRows = await sql`SELECT value FROM settings WHERE key = 'avokado_phase'`;
+    const avoPhase = parseInt((phaseRows[0] && phaseRows[0].value) || '1', 10);
 
     const rows = await sql`SELECT plant_id, last_watered, last_notified FROM watering_state`;
     const now = new Date();
@@ -57,11 +62,16 @@ export default async function handler(req, res) {
 
     for (const r of rows) {
       if (!r.last_watered) continue;
-      const iv = INTERVALS[r.plant_id] && INTERVALS[r.plant_id][season];
+      let iv;
+      if (r.plant_id === 'avokado') {
+        iv = AVO_PHASE_INTERVAL[avoPhase] || 5;
+      } else {
+        iv = INTERVALS[r.plant_id] && INTERVALS[r.plant_id][season];
+      }
       if (!iv) continue;
       const next = new Date(new Date(r.last_watered).getTime() + iv * 86400000);
       if (now >= next) {
-        // pošli oznámení jen jednou za cyklus (dokud nezalijí znovu)
+        // pošli oznámení jen jednou za cyklus (dokud znovu nezalijí / nezkontrolují)
         const notifiedSinceWatering =
           r.last_notified && new Date(r.last_notified) >= new Date(r.last_watered);
         if (!notifiedSinceWatering) due.push(r.plant_id);
@@ -73,10 +83,14 @@ export default async function handler(req, res) {
       return;
     }
 
-    const names = due.map((id) => NAMES[id] || id).join(', ');
+    // Sestav zprávu – zálivka kytek + případně kontrola avokáda
+    const waterNames = due.filter((id) => id !== 'avokado').map((id) => NAMES[id] || id);
+    const parts = [];
+    if (waterNames.length) parts.push(`zalít: ${waterNames.join(', ')}`);
+    if (due.includes('avokado')) parts.push('zkontrolovat avokádo 🥑');
     const payload = JSON.stringify({
-      title: '🌱 Čas na zálivku',
-      body: `Dnes potřebují zalít: ${names}`,
+      title: '🌱 Čas na péči o kytky',
+      body: `Dnes: ${parts.join(' · ')}`,
     });
 
     const subs = await sql`SELECT endpoint, p256dh, auth FROM push_subscriptions`;

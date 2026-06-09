@@ -35,7 +35,9 @@ export default async function handler(req, res) {
       for (const r of rows) watering[r.plant_id] = { lastWatered: r.last_watered };
       const seasonRows = await sql`SELECT value FROM settings WHERE key = 'season'`;
       const season = (seasonRows[0] && seasonRows[0].value) || 'summer';
-      res.status(200).json({ watering, season });
+      const phaseRows = await sql`SELECT value FROM settings WHERE key = 'avokado_phase'`;
+      const avokadoPhase = parseInt((phaseRows[0] && phaseRows[0].value) || '1', 10);
+      res.status(200).json({ watering, season, avokadoPhase });
       return;
     }
 
@@ -47,6 +49,16 @@ export default async function handler(req, res) {
         await sql`
           INSERT INTO settings (key, value) VALUES ('season', ${body.season})
           ON CONFLICT (key) DO UPDATE SET value = ${body.season}`;
+        res.status(200).json({ ok: true });
+        return;
+      }
+
+      // Uložení fáze avokáda
+      if (body.avokadoPhase != null) {
+        const ph = String(Math.max(1, Math.min(4, parseInt(body.avokadoPhase, 10) || 1)));
+        await sql`
+          INSERT INTO settings (key, value) VALUES ('avokado_phase', ${ph})
+          ON CONFLICT (key) DO UPDATE SET value = ${ph}`;
         res.status(200).json({ ok: true });
         return;
       }
