@@ -13,12 +13,14 @@ const INTERVALS = {
   mucholapka: { summer: 2,  winter: 7  },
   hawortie:   { summer: 10, winter: 25 },
   juka:       { summer: 10, winter: 28 },
+  brectan:    { summer: 7,  winter: 12 },
 };
 const NAMES = {
   kaktus: 'Roubovaný kaktus',
   mucholapka: 'Mucholapka',
   hawortie: 'Hawortie',
   juka: 'Juka',
+  brectan: 'Břečťan',
   avokado: 'Avokádo',
 };
 // Avokádo se kontroluje podle fáze (1–4), ne podle sezóny.
